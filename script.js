@@ -3,7 +3,7 @@ const gallery = document.getElementById("gallery");
 // Mendil verilerini buraya ekle
 const images = [
   {src: "mendil1.png", qty: 1, folder: "efsanevi"},
-  {src: "images/nadide/mendil2.jpg", qty: 3, folder: "nadide"},
+  {src: "mendil1.jpg", qty: 3, folder: "nadide"},
   {src: "images/efsanevi/mendil3.jpg", qty: 2, folder: "efsanevi"},
   {src: "images/nadide/mendil4.jpg", qty: 1, folder: "nadide"},
   // buraya daha fazla foto ekleyebilirsin
