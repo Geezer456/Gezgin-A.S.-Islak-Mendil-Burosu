@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gezgin A.Ş. Islak Mendil Bürosu</title>
+    <title>Gezgin A.Ş. Islak Mendil Bürosu v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --accent: #ff7a00;
+            --accent: #ff7a00; /* Turuncu Tema */
             --bg: #0f0f0f;
-            --text: #ffffff;
             --card-bg: #1a1a1a;
+            --text: #ffffff;
         }
 
         body {
             margin: 0;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             display: flex;
@@ -24,15 +25,16 @@
 
         /* Sol Panel */
         #sidebar {
-            width: 300px;
-            padding: 20px;
+            width: 260px;
+            padding: 25px;
             border-right: 3px solid var(--accent);
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        h1 { color: var(--accent); font-size: 24px; margin-bottom: 20px; }
+        h1 { color: var(--accent); font-size: 22px; margin-bottom: 10px; line-height: 1.2; }
+        .stats { font-size: 14px; color: #aaa; margin-bottom: 20px; }
 
         .btn {
             background-color: var(--accent);
@@ -41,62 +43,71 @@
             padding: 12px;
             font-weight: bold;
             cursor: pointer;
-            border-radius: 4px;
-            transition: 0.3s;
+            border-radius: 6px;
+            transition: 0.2s;
+            font-size: 14px;
         }
 
-        .btn:hover { opacity: 0.8; }
-
-        input[type="text"] {
-            padding: 10px;
+        .btn:hover { transform: scale(1.02); opacity: 0.9; }
+        
+        .category-btn {
             background: #222;
-            border: 1px solid #444;
             color: white;
+            border: 1px solid #444;
+            padding: 10px;
+            cursor: pointer;
+            text-align: left;
             border-radius: 4px;
         }
 
-        /* Galeri Alanı */
-        #main-content {
+        .category-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Sağ Galeri Alanı */
+        #main {
             flex: 1;
-            padding: 20px;
+            padding: 30px;
             overflow-y: auto;
         }
 
         #gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 20px;
         }
 
-        .wipe-card {
+        .card {
             background: var(--card-bg);
+            border-radius: 10px;
             padding: 10px;
-            border-radius: 8px;
-            text-align: center;
             position: relative;
             border: 2px solid transparent;
-            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
         }
 
-        .wipe-card:hover { border-color: var(--accent); }
+        .card:hover { border-color: var(--accent); }
 
-        .wipe-card img {
+        .card img {
             width: 100%;
-            height: 100px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
+            background: #000;
         }
 
-        .badge {
+        .qty-badge {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: -5px;
+            right: -5px;
             background: var(--accent);
             color: black;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 10px;
             font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
         }
 
         /* Kamera Modalı */
@@ -104,159 +115,165 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            justify-content: center;
-            align-items: center;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
             flex-direction: column;
-            z-index: 100;
+            align-items: center;
+            justify-content: center;
         }
 
-        video { width: 80%; max-width: 640px; border: 2px solid var(--accent); }
+        video { width: 90%; max-width: 500px; border-radius: 10px; border: 2px solid var(--accent); }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h1>Islak Mendil<br>Koleksiyonu</h1>
-    <div id="counter">Toplam: 0 adet</div>
+    <h1>Gezgin A.Ş.<br>Islak Mendil Bürosu</h1>
+    <div id="count-info" class="stats">Veriler yükleniyor...</div>
     
-    <button class="btn" onclick="openCamera()">📸 Kamera ile Ekle</button>
+    <button class="btn" onclick="startCamera()">📸 Yeni Mendil Ekle</button>
     
-    <input type="text" id="search" placeholder="Mendil ara..." onkeyup="refreshGallery()">
-
-    <div style="display: flex; gap: 5px;">
-        <button class="btn" onclick="cycleTheme()">🎨</button>
-        <button class="btn" onclick="randomWipe()">🎲</button>
-        <button class="btn" onclick="showStats()">📊</button>
+    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <p style="font-size: 12px; color: #666; margin: 0;">KLASÖRLER</p>
+        <button class="category-btn active" onclick="changeCat('yaygin', this)">🗂️ Yaygın</button>
+        <button class="category-btn" onclick="changeCat('nadide', this)">🗂️ Nadide</button>
+        <button class="category-btn" onclick="changeCat('efsanevi', this)">🗂️ Efsanevi</button>
     </div>
 
-    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 5px;">
-        <button class="btn" onclick="setCategory('yaygin')">🗂️ Yaygın</button>
-        <button class="btn" onclick="setCategory('nadide')">🗂️ Nadide</button>
-        <button class="btn" onclick="setCategory('efsanevi')">🗂️ Efsanevi</button>
-        <button class="btn" onclick="setCategory('favoriler')">❤️ Favoriler</button>
-    </div>
+    <div style="margin-top: auto; font-size: 10px; color: #444;">LGS.OS Cloud System v2.0</div>
 </div>
 
-<div id="main-content">
-    <div id="gallery"></div>
+<div id="main">
+    <div id="gallery">
+        </div>
 </div>
 
 <div id="camera-modal">
-    <video id="video" autoplay></video>
-    <div style="margin-top: 20px; gap: 10px; display: flex;">
-        <button class="btn" onclick="capturePhoto()">📸 Çek</button>
-        <button class="btn" style="background: #ccc;" onclick="closeCamera()">İptal</button>
+    <video id="video" autoplay playsinline></video>
+    <div style="margin-top: 20px; display: flex; gap: 15px;">
+        <button class="btn" onclick="captureAndUpload()">📸 FOTOĞRAFI ÇEK</button>
+        <button class="btn" style="background:#444; color:white;" onclick="stopCamera()">İPTAL</button>
     </div>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <canvas id="photo-canvas" style="display:none;"></canvas>
 </div>
 
 <script>
-    let wipes = JSON.parse(localStorage.getItem('wipes')) || [];
-    let currentCategory = 'nadide';
-    const themes = ["#ff7a00", "#2ecc71", "#3498db", "#ffffff", "#f1c40f", "#e84393", "#e74c3c"];
-    let themeIdx = 0;
+    // --- SUPABASE AYARLARI ---
+    const S_URL = "https://jistofpcjunfescntg.supabase.co";
+    const S_KEY = "sb_publishable_X13SKaqohlb49BYKiZp3xg_UDn7CRCY"; 
+    const supabaseClient = supabase.createClient(S_URL, S_KEY);
 
-    // --- TEMA SİSTEMİ ---
-    function cycleTheme() {
-        themeIdx = (themeIdx + 1) % themes.length;
-        document.documentElement.style.setProperty('--accent', themes[themeIdx]);
-    }
+    let currentCategory = 'yaygin';
 
-    // --- KAMERA İŞLEMLERİ ---
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
+    // --- VERİLERİ ÇEK ---
+    async function loadData() {
+        const info = document.getElementById('count-info');
+        const { data, error } = await supabaseClient
+            .from('mendiller')
+            .select('*')
+            .eq('category', currentCategory)
+            .order('id', { ascending: false });
 
-    async function openCamera() {
-        document.getElementById('camera-modal').style.display = 'flex';
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-    }
-
-    function closeCamera() {
-        video.srcObject.getTracks().forEach(track => track.stop());
-        document.getElementById('camera-modal').style.display = 'none';
-    }
-
-    function capturePhoto() {
-        const context = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0);
-        
-        const name = prompt("Bu mendilin adı nedir?");
-        if(name) {
-            const newWipe = {
-                id: Date.now(),
-                name: name,
-                img: canvas.toDataURL('image/jpeg'),
-                category: currentCategory,
-                qty: 1
-            };
-            wipes.push(newWipe);
-            save();
-            refreshGallery();
+        if (error) {
+            info.innerText = "Bağlantı Hatası!";
+            return;
         }
-        closeCamera();
-    }
 
-    // --- GALERİ VE MANTIK ---
-    function save() {
-        localStorage.setItem('wipes', JSON.stringify(wipes));
-    }
-
-    function setCategory(cat) {
-        currentCategory = cat;
-        refreshGallery();
-    }
-
-    function refreshGallery() {
-        const query = document.getElementById('search').value.toLowerCase();
         const container = document.getElementById('gallery');
         container.innerHTML = '';
-        
-        const filtered = wipes.filter(w => 
-            (currentCategory === 'favoriler' ? w.isFavorite : w.category === currentCategory) &&
-            w.name.toLowerCase().includes(query)
-        );
+        info.innerText = `${currentCategory.toUpperCase()}: ${data.length} adet`;
 
-        filtered.forEach(w => {
+        data.forEach(item => {
             const card = document.createElement('div');
-            card.className = 'wipe-card';
+            card.className = 'card';
             card.innerHTML = `
-                ${w.qty > 1 ? `<span class="badge">${w.qty}</span>` : ''}
-                <img src="${w.img}">
-                <div style="margin-top:5px; font-size:12px;">${w.name}</div>
+                ${item.qty > 1 ? `<div class="qty-badge">x${item.qty}</div>` : ''}
+                <img src="${item.image_url}" alt="${item.name}">
+                <div style="margin-top:8px; font-weight:bold; font-size:13px;">${item.name}</div>
             `;
-            card.onclick = () => { if(confirm("Miktarı artır?")) { w.qty++; save(); refreshGallery(); }};
+            // Sağ tıkla silme özelliği
             card.oncontextmenu = (e) => {
                 e.preventDefault();
-                if(confirm("Silinsin mi?")) {
-                    wipes = wipes.filter(item => item.id !== w.id);
-                    save(); refreshGallery();
-                }
+                if(confirm(`${item.name} silinsin mi?`)) deleteItem(item.id);
             };
             container.appendChild(card);
         });
-
-        document.getElementById('counter').innerText = `Toplam: ${wipes.length} adet`;
     }
 
-    function showStats() {
-        const stats = wipes.reduce((acc, curr) => {
-            acc[curr.category] = (acc[curr.category] || 0) + 1;
-            return acc;
-        }, {});
-        alert(`📊 İstatistikler:\nYaygın: ${stats.yaygin || 0}\nNadide: ${stats.nadide || 0}\nEfsanevi: ${stats.efsanevi || 0}`);
+    // --- KATEGORİ DEĞİŞTİR ---
+    function changeCat(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadData();
     }
 
-    function randomWipe() {
-        if(wipes.length === 0) return alert("Koleksiyon boş!");
-        const rand = wipes[Math.floor(Math.random() * wipes.length)];
-        alert("🎲 Şansına gelen mendil: " + rand.name);
+    // --- KAMERA YÖNETİMİ ---
+    const video = document.getElementById('video');
+    async function startCamera() {
+        document.getElementById('camera-modal').style.display = 'flex';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
     }
 
-    refreshGallery();
+    function stopCamera() {
+        if(video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+        document.getElementById('camera-modal').style.display = 'none';
+    }
+
+    // --- FOTOĞRAF ÇEK VE BULUTA YÜKLE ---
+    async function captureAndUpload() {
+        const canvas = document.getElementById('photo-canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        const name = prompt("Bu ıslak mendilin markası/adı nedir?");
+        if (!name) return;
+
+        document.getElementById('count-info').innerText = "Yükleniyor... Sabret kanki.";
+
+        canvas.toBlob(async (blob) => {
+            const fileName = `mendil_${Date.now()}.jpg`;
+
+            // 1. Storage'a yükle (mendil_fotolari kovasına)
+            const { data: sData, error: sErr } = await supabaseClient.storage
+                .from('mendil_fotolari')
+                .upload(fileName, blob);
+
+            if (sErr) { alert("Yükleme hatası: " + sErr.message); return; }
+
+            // 2. Linki al
+            const { data: urlData } = supabaseClient.storage
+                .from('mendil_fotolari')
+                .getPublicUrl(fileName);
+
+            // 3. Veritabanına kaydet
+            const { error: dbErr } = await supabaseClient
+                .from('mendiller')
+                .insert([{
+                    name: name,
+                    category: currentCategory,
+                    image_url: urlData.publicUrl,
+                    qty: 1
+                }]);
+
+            if (dbErr) alert("Veritabanı hatası: " + dbErr.message);
+            
+            stopCamera();
+            loadData();
+        }, 'image/jpeg', 0.8);
+    }
+
+    // --- SİLME FONKSİYONU ---
+    async function deleteItem(id) {
+        const { error } = await supabaseClient.from('mendiller').delete().eq('id', id);
+        if (!error) loadData();
+    }
+
+    // Sayfa açılınca verileri getir
+    loadData();
 </script>
+
 </body>
 </html>
